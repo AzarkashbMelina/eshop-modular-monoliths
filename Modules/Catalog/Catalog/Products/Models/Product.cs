@@ -1,6 +1,6 @@
 ﻿namespace Catalog.Products.Models
 {
-    public class Product : Entity<Guid>
+    public class Product : Aggregate<Guid>
     {
         public string Name { get; private set; } = default!;
         public List<string> Category { get; private set; } = new();
@@ -25,6 +25,8 @@
                 Price = price
             };
 
+            product.AddDomainEvent(new ProductCreatedEvent(product));
+
             return product;
         }
 
@@ -34,11 +36,18 @@
             ArgumentException.ThrowIfNullOrEmpty(name);
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(price);
 
+            //update product entity fields
             Name = name;
             Category = category;
             Description = description;
             ImageFile = imageFile;
             Price = price;
+
+            if (Price != price)
+            {
+                Price = price;
+                AddDomainEvent(new ProductPriceChangedEvent(this)); //this means existing product entity
+            }
         }
     }
 }
